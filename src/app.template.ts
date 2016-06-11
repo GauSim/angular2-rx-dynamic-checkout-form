@@ -5,8 +5,9 @@ export default `
   <div class="row">
     <div class="col-md-12">
        <div template="ngFor let button of stepButtons; let i = index">
-        <button class="pull-left" md-raised-button [disabled]="!button.depsAreValid" [color]="(button.isCurrent ? 'primary' : '')" (click)="goTo(button.stepId)">
+        <button class="pull-left" md-raised-button [disabled]="!button.hasValidDependencies" [color]="(button.isCurrent ? 'primary' : '')" (click)="goTo(button.stepId)">
           {{ button.name }}
+          <span [class]="(button.isValid ? 'glyphicon glyphicon-ok' : '')" aria-hidden="true"></span>
         </button>
       </div>
     </div>

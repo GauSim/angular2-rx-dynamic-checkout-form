@@ -35,13 +35,11 @@ export class AppComponent implements OnInit {
   constructor(public store: Store<AppState>) {
     this.root = store.select(s => s.root);
     this.root.subscribe(root => {
-      console.log(root);
+      this.showNextButton = root.stepNavigation.nextButton.isAvailable;
+      this.showPrevButton = root.stepNavigation.prevButton.isAvailable;
 
-      this.showNextButton = root.stepNavigation.hasNext;
-      this.showPrevButton = root.stepNavigation.hasPrev;
-
-      this.disableNextButton = !root.stepNavigation.canNavNext;
-      this.disablePrevButton = !root.stepNavigation.canNavPrev;
+      this.disableNextButton = !root.stepNavigation.nextButton.isReachable;
+      this.disablePrevButton = !root.stepNavigation.prevButton.isReachable;
 
       this.currentStep = root.stepStates[root.currentStepName];
 
