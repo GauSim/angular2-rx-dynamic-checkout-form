@@ -1,5 +1,5 @@
 {
-  "name": "angular2-rx-form",
+  "name": "angular2-rx-dynamic-checkout-form",
   "version": "1.0.0",
   "scripts": {
     "start": "npm run build && concurrently \"npm run watch\" \"npm run lite\" ",
