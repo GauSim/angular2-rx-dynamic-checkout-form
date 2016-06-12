@@ -3,7 +3,7 @@ export default `
     <h1>{{ step.name }}</h1>
     <pre>{{ step | json }}</pre>
 
-<button (click)="validate()">mark as valid</button>
+<button class="pull-right" (click)="toggleValidity()">toogle valid</button>
 
 </md-card>
   

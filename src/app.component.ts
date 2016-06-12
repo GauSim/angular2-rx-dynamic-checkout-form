@@ -4,7 +4,7 @@ import { MD_BUTTON_DIRECTIVES } from '@angular2-material/button';
 import { MD_TABS_DIRECTIVES } from '@angular2-material/tabs';
 import { Observable } from 'rxjs';
 
-import { ACTIONS, STEP_NAME, RootState, StepState } from './app.store';
+import { ACTIONS, STEP_NAME, RootState, StepState, IStepNavigationButton } from './app.store';
 import { AppState } from './index';
 import { propPipe } from './pipes/propPipe';
 
@@ -21,6 +21,9 @@ import template from './app.template';
 
 export class AppComponent implements OnInit {
 
+  nextButton: IStepNavigationButton;
+  prevButton: IStepNavigationButton;
+
   showPrevButton: boolean = false;
   showNextButton: boolean = false;
 
@@ -35,6 +38,11 @@ export class AppComponent implements OnInit {
   constructor(public store: Store<AppState>) {
     this.root = store.select(s => s.root);
     this.root.subscribe(root => {
+
+      this.nextButton = root.stepNavigation.nextButton;
+      this.prevButton = root.stepNavigation.prevButton;
+
+
       this.showNextButton = root.stepNavigation.nextButton.isAvailable;
       this.showPrevButton = root.stepNavigation.prevButton.isAvailable;
 
@@ -56,15 +64,13 @@ export class AppComponent implements OnInit {
     });
   }
 
-  goNext() {
+  debugsetValidity() {
     this.store.dispatch({
-      type: ACTIONS.STEPS_GO_NEXT
-    });
-  }
-
-  goPrev() {
-    this.store.dispatch({
-      type: ACTIONS.STEPS_GO_PREV
+      type: ACTIONS.STEP_SET_VALIDITY,
+      payload: [
+        { stepId: STEP_NAME.STEP1, validity: false },
+        { stepId: STEP_NAME.STEP2, validity: false }
+      ]
     });
   }
 
@@ -74,31 +80,31 @@ export class AppComponent implements OnInit {
     const initSteps: StepState[] = [
       {
         id: STEP_NAME.STEP1,
-        name: 'Seite1',
+        title: 'Seite 1',
         isValid: false,
         dependencySteps: []
       },
       {
         id: STEP_NAME.STEP2,
-        name: 'Seite2',
+        title: 'Seite 2',
         isValid: false,
         dependencySteps: [STEP_NAME.STEP1]
       },
       {
         id: STEP_NAME.STEP3,
-        name: 'Seite3',
+        title: 'Seite 3',
         isValid: false,
-        dependencySteps: [STEP_NAME.STEP1, STEP_NAME.STEP2]
+        dependencySteps: [STEP_NAME.STEP2]
       },
       {
         id: STEP_NAME.STEP4,
-        name: 'Seite4',
+        title: 'Seite 4',
         isValid: false,
-        dependencySteps: [STEP_NAME.STEP1, STEP_NAME.STEP2, STEP_NAME.STEP3]
+        dependencySteps: [STEP_NAME.STEP3]
       },
       {
         id: STEP_NAME.STEP5,
-        name: 'Seite5',
+        title: 'Seite 5',
         isValid: false,
         dependencySteps: [STEP_NAME.STEP1]
       }

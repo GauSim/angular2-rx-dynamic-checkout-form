@@ -21,11 +21,14 @@ export class StepBase {
     constructor(public store: Store<AppState>) {
     }
 
-    validate() {
-        console.log('call');
+    toggleValidity() {
+        this.setValidity(!this.step.isValid);
+    }
+
+    setValidity(validity) {
         this.store.dispatch({
-            type: ACTIONS.STEP_VALIDATE,
-            payload: null
+            type: ACTIONS.STEP_SET_VALIDITY,
+            payload: [{ stepId: this.step.id, validity: validity }]
         });
     }
 }
