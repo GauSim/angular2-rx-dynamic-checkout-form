@@ -13,6 +13,9 @@ export const STEP_NAME = {
     CHECKOUT: "CHECKOUT",
 }
 
+export interface AppState {
+    root: RootState;
+}
 
 export interface RootState {
     currentStepName: string;
@@ -21,7 +24,6 @@ export interface RootState {
     stepOrder: string[];
     stepStates: { [key: string]: StepState };
 }
-
 
 export interface StepState {
     id: string;

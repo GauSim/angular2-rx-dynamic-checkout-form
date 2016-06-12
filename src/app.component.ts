@@ -1,67 +1,40 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { MD_BUTTON_DIRECTIVES } from '@angular2-material/button';
 import { MD_TABS_DIRECTIVES } from '@angular2-material/tabs';
 import { Observable } from 'rxjs';
 
-import { ACTIONS, STEP_NAME, RootState, StepState, IStepNavigationButton } from './app.store';
-import { AppState } from './index';
+import { ACTIONS, STEP_NAME, AppState, RootState, StepState, IStepNavigationButton } from './app.store';
 import { propPipe } from './pipes/propPipe';
 
 import { StepBase } from './step.componet';
-
+import { NavigationButton } from './NavigationButton.componet';
 
 import template from './app.template';
 @Component({
   selector: 'app-root',
   template: template,
-  directives: [MD_BUTTON_DIRECTIVES, MD_TABS_DIRECTIVES, StepBase],
+  directives: [NavigationButton, MD_TABS_DIRECTIVES, StepBase],
   pipes: [propPipe]
 })
 
 export class AppComponent implements OnInit {
 
-  nextButton: IStepNavigationButton;
-  prevButton: IStepNavigationButton;
+  stepButtons: Observable<IStepNavigationButton[]>;
+  nextButton: Observable<IStepNavigationButton>;
+  prevButton: Observable<IStepNavigationButton>;
 
-  showPrevButton: boolean = false;
-  showNextButton: boolean = false;
-
-  disablePrevButton: boolean = true;
-  disableNextButton: boolean = true;
 
   currentStep: StepState = null;
-  stepButtons;
-
-  root: Observable<RootState>;
 
   constructor(public store: Store<AppState>) {
-    this.root = store.select(s => s.root);
-    this.root.subscribe(root => {
-
-      this.nextButton = root.stepNavigation.nextButton;
-      this.prevButton = root.stepNavigation.prevButton;
-
-
-      this.showNextButton = root.stepNavigation.nextButton.isAvailable;
-      this.showPrevButton = root.stepNavigation.prevButton.isAvailable;
-
-      this.disableNextButton = !root.stepNavigation.nextButton.isReachable;
-      this.disablePrevButton = !root.stepNavigation.prevButton.isReachable;
-
+    store.select(s => s.root).subscribe(root => {
       this.currentStep = root.stepStates[root.currentStepName];
-
-      this.stepButtons = root.stepNavigation.stepButtons;
     });
 
+    this.nextButton = store.select(store => store.root.stepNavigation.nextButton);
+    this.prevButton = store.select(store => store.root.stepNavigation.prevButton);
+    this.stepButtons = store.select(store => store.root.stepNavigation.stepButtons);
 
-  }
-
-  goTo(stepId) {
-    this.store.dispatch({
-      type: ACTIONS.STEPS_GO_STEPID,
-      payload: { stepId }
-    });
   }
 
   debugsetValidity() {

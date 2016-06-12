@@ -7,10 +7,6 @@ import { AppComponent } from './app.component';
 import { rootReducer, RootState } from './app.store';
 
 
-export interface AppState {
-    root: RootState;
-}
-
 const appState = provideStore({
     root: rootReducer
 });
