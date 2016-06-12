@@ -2,7 +2,6 @@ import { ActionReducer, Action, provideStore } from '@ngrx/store';
 import * as Immutable from 'immutable';
 import * as _ from 'underscore';
 
-
 export const STEP_NAME = {
     INIT: "INIT",
     STEP1: "STEP1",
@@ -19,7 +18,6 @@ export interface AppState {
 
 export interface RootState {
     currentStepName: string;
-    nextStepNavigationStrategy: NAVIGATION_STRATEGY;
     stepNavigation: IStepNavigation;
     stepOrder: string[];
     stepStates: { [key: string]: StepState };
@@ -32,12 +30,13 @@ export interface StepState {
     dependencySteps: string[];
 }
 
-interface INavigationButtons {
+export interface INavigationButtons {
     nextButton: IStepNavigationButton;
     prevButton: IStepNavigationButton;
 };
 
-interface IStepNavigation extends INavigationButtons {
+export interface IStepNavigation extends INavigationButtons {
+    nextStepNavigationStrategy: NAVIGATION_STRATEGY;
     stepButtons: IStepNavigationButton[];
 };
 
@@ -49,8 +48,6 @@ export interface IStepNavigationButton {
     isAvailable: boolean;
     isValid: boolean;
 }
-
-
 
 enum NAVIGATION_STRATEGY {
     DIRECT_ORDER_NEXT,
@@ -79,38 +76,31 @@ function registerSteps(state: RootState, steps: StepState[]): RootState {
         stepStates,
         stepOrder,
         currentStepName: state.currentStepName ? state.currentStepName : steps[0].id,
-        nextStepNavigationStrategy: state.nextStepNavigationStrategy,
-        stepNavigation: null
+        stepNavigation: state.stepNavigation
     };
 
     const stepNavigation: IStepNavigation = creatStepNavigation(nextState);
     return Object.assign({}, nextState, { stepNavigation });
 }
 
-
-function hasValidDependencies(state: RootState, stepId: string): boolean {
-    let valid = true;
-    state.stepStates[stepId].dependencySteps.forEach(depStepId => {
-        valid = valid && state.stepStates[depStepId].isValid;
-    });
-    return valid;
+/**
+ * checks if all dependencySteps of the step for stepId are valid
+ */
+function isReachableStep(state: RootState, stepId: string): boolean {
+    return state.stepStates[stepId].dependencySteps
+        .map(depStepId => state.stepStates[depStepId].isValid)
+        .reduce((lastIsValid, thisIsValid, idx) => (lastIsValid && thisIsValid), true);
 }
 
-
-
-/**
- * get the next and prev depending on Reachability of the neighbor
- * so if the dependencySteps are valid to jump in
- */
 function getReachableNeighbors(state: RootState = init): INavigationButtons {
 
     const currentIndex = state.stepOrder.indexOf(state.currentStepName)
 
     let reachableUpper = [];
-    let reachableLower = state.stepOrder.filter((id, x) => x < currentIndex && hasValidDependencies(state, id));
+    let reachableLower = state.stepOrder.filter((id, x) => x < currentIndex && isReachableStep(state, id));
 
-    if (state.nextStepNavigationStrategy === NAVIGATION_STRATEGY.REACHABLE_NEXT) {
-        reachableUpper = state.stepOrder.filter((id, x) => x > currentIndex && hasValidDependencies(state, id));
+    if (state.stepNavigation.nextStepNavigationStrategy === NAVIGATION_STRATEGY.REACHABLE_NEXT) {
+        reachableUpper = state.stepOrder.filter((id, x) => x > currentIndex && isReachableStep(state, id));
     }
 
     const nextReachableId = reachableUpper.length > 0 ? reachableUpper[0] : null;
@@ -125,8 +115,8 @@ function getReachableNeighbors(state: RootState = init): INavigationButtons {
     const nextIsAvailable = nextId ? true : false;
     const prevIsAvailable = prevId ? true : false;
 
-    const nextIsReachable = nextIsAvailable && (nextId === nextReachableId || hasValidDependencies(state, nextId));
-    const prevIsReachable = prevIsAvailable && (prevId === prevReachableId || hasValidDependencies(state, prevId));
+    const nextIsReachable = nextIsAvailable && (nextId === nextReachableId || isReachableStep(state, nextId));
+    const prevIsReachable = prevIsAvailable && (prevId === prevReachableId || isReachableStep(state, prevId));
 
     const nexIsValid = nextIsAvailable && state.stepStates[nextId].isValid;
     const prevIsValid = prevIsAvailable && state.stepStates[prevId].isValid;
@@ -152,8 +142,6 @@ function getReachableNeighbors(state: RootState = init): INavigationButtons {
 }
 
 
-
-
 function creatStepNavigation(state: RootState = init): IStepNavigation {
 
     const { nextButton, prevButton } = getReachableNeighbors(state);
@@ -161,11 +149,12 @@ function creatStepNavigation(state: RootState = init): IStepNavigation {
     return {
         nextButton,
         prevButton,
+        nextStepNavigationStrategy: state.stepNavigation.nextStepNavigationStrategy,
         stepButtons: state.stepOrder.map(stepId => {
             return {
                 stepId: stepId,
                 title: state.stepStates[stepId].title,
-                isReachable: hasValidDependencies(state, stepId),
+                isReachable: isReachableStep(state, stepId),
                 isCurrent: state.currentStepName === stepId,
                 isValid: state.stepStates[stepId].isValid,
                 isAvailable: true
@@ -174,14 +163,13 @@ function creatStepNavigation(state: RootState = init): IStepNavigation {
     };
 }
 
-
 function navigateTo(state: RootState, { stepId }: { stepId: string }): RootState {
 
     if (state.stepOrder.indexOf(stepId) === -1) {
         return state;
     }
 
-    if (!hasValidDependencies(state, stepId)) {
+    if (!isReachableStep(state, stepId)) {
         console.log("depsAreValid is false");
         return state;
     }
@@ -196,7 +184,10 @@ function setValidityRecursively(_stepStates: { [key: string]: StepState }, chang
     const stepStates: { [key: string]: StepState } = Object.assign({}, _stepStates);
 
     const dependencyStepsChanges: { stepId: string, validity: boolean }[] = [];
+
+    // todo avoid forEach
     changes.forEach(change => {
+
         stepStates[change.stepId].isValid = change.validity;
 
         if (change.validity === false) {
@@ -226,12 +217,11 @@ function setValidity(state: RootState, changes: { stepId: string, validity: bool
     return Object.assign({}, nextState, { stepNavigation });
 }
 
-
 export const ACTIONS = {
     STEPS_REGISTER: 'STEPS_REGISTER',
-    STEPS_GO_NEXT: 'STEPS_GO_NEXT',
-    STEPS_GO_PREV: 'STEPS_GO_PREV',
+
     STEPS_GO_STEPID: 'STEPS_GO_STEPID',
+
     STEP_SET_VALIDITY: 'STEP_SET_VALIDITY'
 }
 
@@ -246,8 +236,8 @@ export const init: RootState = {
             dependencySteps: []
         }
     },
-    nextStepNavigationStrategy: NAVIGATION_STRATEGY.DIRECT_ORDER_NEXT, // NAVIGATION_STRATEGY.REACHABLE,
     stepNavigation: {
+        nextStepNavigationStrategy: NAVIGATION_STRATEGY.REACHABLE_NEXT, //NAVIGATION_STRATEGY.DIRECT_ORDER_NEXT, 
         nextButton: {
             title: '',
             stepId: null,
@@ -274,23 +264,12 @@ export const rootReducer: ActionReducer<RootState> = (state: RootState = init, a
         case ACTIONS.STEPS_REGISTER:
             return registerSteps(state, action.payload as StepState[]);
 
-        case ACTIONS.STEPS_GO_NEXT:
-            if (!state.stepNavigation.nextButton.isAvailable || !state.stepNavigation.nextButton.isReachable) {
-                return state;
-            }
-            return navigateTo(state, { stepId: state.stepNavigation.nextButton.stepId });
-
-        case ACTIONS.STEPS_GO_PREV:
-            if (!state.stepNavigation.prevButton.isAvailable || !state.stepNavigation.prevButton.isReachable) {
-                return state;
-            }
-            return navigateTo(state, { stepId: state.stepNavigation.prevButton.stepId });
+        case ACTIONS.STEPS_GO_STEPID:
+            return navigateTo(state, action.payload as { stepId: string });
 
         case ACTIONS.STEP_SET_VALIDITY:
             return setValidity(state, action.payload as [{ stepId: string, validity: boolean }]);
 
-        case ACTIONS.STEPS_GO_STEPID:
-            return navigateTo(state, action.payload as { stepId: string });
 
         default:
             return state;

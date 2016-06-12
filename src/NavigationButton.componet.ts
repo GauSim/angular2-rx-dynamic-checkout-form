@@ -6,7 +6,7 @@ import { ACTIONS, IStepNavigationButton, AppState } from './app.store';
 @Component({
     selector: 'navigation-button',
     template: ` <button md-raised-button [color]="(buttonModel.isCurrent ? 'primary' : '')" [class.hidden]="!buttonModel.isAvailable" [disabled]="!buttonModel.isReachable" (click)="goTo(buttonModel.stepId)">
-                    {{ buttonModel.title }} <span [class]="(buttonModel.isValid ? 'glyphicon glyphicon-ok' : '')" aria-hidden="true"></span>
+                    <span [class]="(buttonModel.isValid ? 'glyphicon glyphicon-ok' : '')" aria-hidden="true"></span> {{ buttonModel.title }}
                 </button>`,
     directives: [MD_BUTTON_DIRECTIVES],
     pipes: []
