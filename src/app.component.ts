@@ -55,30 +55,35 @@ export class AppComponent implements OnInit {
         id: STEP_NAME.STEP1,
         title: 'Seite 1',
         isValid: false,
+        isLoading:false,
         dependencySteps: []
       },
       {
         id: STEP_NAME.STEP2,
         title: 'Seite 2',
         isValid: false,
+        isLoading:false,
         dependencySteps: [STEP_NAME.STEP1]
       },
       {
         id: STEP_NAME.STEP3,
         title: 'Seite 3',
         isValid: false,
+        isLoading:false,
         dependencySteps: [STEP_NAME.STEP2]
       },
       {
         id: STEP_NAME.STEP4,
         title: 'Seite 4',
         isValid: false,
+        isLoading:false,
         dependencySteps: [STEP_NAME.STEP3]
       },
       {
         id: STEP_NAME.STEP5,
         title: 'Seite 5',
         isValid: false,
+        isLoading:false,
         dependencySteps: [STEP_NAME.STEP1]
       }
     ]

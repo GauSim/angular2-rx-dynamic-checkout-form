@@ -27,6 +27,7 @@ export interface StepState {
     id: string;
     title: string;
     isValid: boolean;
+    isLoading:boolean;
     dependencySteps: string[];
 }
 
@@ -233,6 +234,7 @@ export const init: RootState = {
             id: STEP_NAME.CHECKOUT,
             title: STEP_NAME.CHECKOUT,
             isValid: false,
+            isLoading:false,
             dependencySteps: []
         }
     },
